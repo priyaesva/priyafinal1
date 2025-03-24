@@ -1,0 +1,107 @@
+INSERT INTO admin (username, password) VALUES ('admin', MD5('admin123'));
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    name VARCHAR(255),
+    phone VARCHAR(20)
+);
+
+
+CREATE TABLE buses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bus_name VARCHAR(255) NOT NULL,
+    bus_type VARCHAR(50) NOT NULL, -- e.g., "AC", "Non-AC", "Sleeper", "Seater"
+    total_seats INT NOT NULL,
+    seating_arrangement TEXT, -- Optional: Store seat layout information (e.g., JSON)
+    bus_number VARCHAR(50) UNIQUE NOT NULL
+);
+
+
+CREATE TABLE schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bus_id INT NOT NULL,
+    route_from VARCHAR(255) NOT NULL,
+    route_to VARCHAR(255) NOT NULL,
+    travel_date DATE NOT NULL,
+    departure_time TIME NOT NULL,
+    arrival_time TIME NOT NULL,
+    sleeper_price DECIMAL(10, 2) NOT NULL,
+    seater_price DECIMAL(10, 2) NOT NULL,
+    available_seats INT,
+    sleeper_seats INT,
+    seater_seats INT,
+    FOREIGN KEY (bus_id) REFERENCES buses(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id VARCHAR(255) UNIQUE NOT NULL,
+    user_id INT NOT NULL,
+    schedule_id INT NOT NULL,
+    seat_number VARCHAR(255) NOT NULL, -- Can store multiple seat numbers as a comma-separated string
+    booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('confirmed', 'pending', 'cancelled') DEFAULT 'pending',
+    total_amount DECIMAL(10, 2) NOT NULL,
+    contact_number VARCHAR(20),
+    upi_id VARCHAR(255),
+    transaction_id VARCHAR(255),
+    booking_status ENUM('confirmed', 'cancelled') DEFAULT 'confirmed',
+    created_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id VARCHAR(255) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_method VARCHAR(50) NOT NULL, -- e.g., "UPI"
+    payment_status ENUM('SUCCESS', 'FAILED', 'PENDING') NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    transaction_id VARCHAR(255),
+    FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE passenger_details (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id VARCHAR(255) NOT NULL,
+    seat_number VARCHAR(10) NOT NULL,
+    passenger_name VARCHAR(255) NOT NULL,
+    age INT NOT NULL,
+    gender ENUM('M', 'F', 'O') NOT NULL,
+    phone VARCHAR(20),
+    user_id INT,
+    schedule_id INT,
+    FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE passengers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    age INT NOT NULL,
+    gender ENUM('M', 'F', 'O') NOT NULL,
+    seat_number VARCHAR(10) NOT NULL,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE bus_schedule (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bus_id INT NOT NULL,
+    departure_time TIME NOT NULL,
+    arrival_time TIME NOT NULL,
+    source VARCHAR(255) NOT NULL,
+    destination VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
+    fare DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (bus_id) REFERENCES buses(id) ON DELETE CASCADE
+);
